@@ -5,6 +5,7 @@ import Card from '@components/common/Card'
 import Button from '@components/common/Button'
 import Spinner from '@components/common/Spinner'
 import EmptyState from '@components/common/EmptyState'
+import BackButton from '@components/common/BackButton'
 import { formatRelativeDate } from '@utils/helpers'
 import toast from 'react-hot-toast'
 
@@ -65,6 +66,7 @@ const CommentModeration = () => {
     return (
       <div className="py-12">
         <div className="container-custom">
+          <BackButton />
           <h1 className="text-4xl font-heading text-primary mb-8">Moderación de Comentarios</h1>
           <EmptyState
             emoji="💬"
@@ -79,6 +81,7 @@ const CommentModeration = () => {
   return (
     <div className="py-12">
       <div className="container-custom">
+        <BackButton />
         <div className="mb-8">
           <h1 className="text-4xl font-heading text-primary mb-2">Moderación de Comentarios</h1>
           <p className="text-neutral-gray-600">

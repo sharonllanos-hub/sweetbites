@@ -351,7 +351,7 @@ router.put('/change-password', verifyToken, async (req, res) => {
 
         // Obtener usuario con contraseña
         const [users] = await db.execute(
-            'SELECT id, password FROM users WHERE id = ?',
+            'SELECT id, password_hash FROM users WHERE id = ?',
             [req.user.id]
         );
 
@@ -366,7 +366,7 @@ router.put('/change-password', verifyToken, async (req, res) => {
 
         // Verificar contraseña actual
         const bcrypt = require('bcryptjs');
-        const validPassword = await bcrypt.compare(currentPassword, user.password);
+        const validPassword = await bcrypt.compare(currentPassword, user.password_hash);
 
         if (!validPassword) {
             return res.status(401).json({
@@ -380,7 +380,7 @@ router.put('/change-password', verifyToken, async (req, res) => {
 
         // Actualizar contraseña en la base de datos
         await db.execute(
-            'UPDATE users SET password = ? WHERE id = ?',
+            'UPDATE users SET password_hash = ? WHERE id = ?',
             [hashedPassword, req.user.id]
         );
 
@@ -391,9 +391,12 @@ router.put('/change-password', verifyToken, async (req, res) => {
 
     } catch (error) {
         console.error('Error al cambiar contraseña:', error);
+        console.error('Error stack:', error.stack);
+        console.error('Error message:', error.message);
         res.status(500).json({
             success: false,
-            message: 'Error al cambiar la contraseña'
+            message: 'Error al cambiar la contraseña',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
 });

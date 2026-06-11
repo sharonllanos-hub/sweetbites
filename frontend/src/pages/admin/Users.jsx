@@ -6,6 +6,7 @@ import Input from '@components/common/Input'
 import Badge from '@components/common/Badge'
 import Spinner from '@components/common/Spinner'
 import Modal from '@components/common/Modal'
+import BackButton from '@components/common/BackButton'
 import { formatRelativeDate } from '@utils/helpers'
 import toast from 'react-hot-toast'
 
@@ -77,6 +78,7 @@ const Users = () => {
   return (
     <div className="py-12">
       <div className="container-custom">
+        <BackButton />
         <div className="mb-8">
           <h1 className="text-4xl font-heading text-primary mb-2">Gestión de Usuarios</h1>
           <p className="text-neutral-gray-600">
