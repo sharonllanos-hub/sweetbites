@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  # Base de datos MySQL
+  database:
+    image: mysql:8.0
+    container_name: sweetbites-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-sweetbites_root_2024}
+      MYSQL_DATABASE: ${DB_NAME:-sweetbites_db}
+      MYSQL_USER: ${DB_USER:-sweetbites_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-sweetbites_pass_2024}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./database/seed_recetas_ejemplo.sql:/docker-entrypoint-initdb.d/02-seed.sql
+    ports:
+      - "3306:3306"
+    networks:
+      - sweetbites-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD:-sweetbites_root_2024}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend Node.js + Express
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sweetbites-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DB_HOST: database
+      DB_USER: ${DB_USER:-sweetbites_user}
+      DB_PASSWORD: ${DB_PASSWORD:-sweetbites_pass_2024}
+      DB_NAME: ${DB_NAME:-sweetbites_db}
+      JWT_SECRET: ${JWT_SECRET:-sweetbites_jwt_secret_super_seguro_2024}
+    volumes:
+      - ./backend/uploads:/app/uploads
+    ports:
+      - "3000:3000"
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - sweetbites-network
+
+  # Frontend React + Vite + Nginx
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: sweetbites-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - sweetbites-network
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  sweetbites-network:
+    driver: bridge

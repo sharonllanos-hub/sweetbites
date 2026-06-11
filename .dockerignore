@@ -1,0 +1,16 @@
+node_modules
+npm-debug.log
+.git
+.gitignore
+*.md
+.env.local
+.DS_Store
+dist
+build
+*.docx
+*.txt
+docs
+ejemplos
+Guia
+.claude
+generar_*.py
