@@ -34,7 +34,8 @@ desktop.ini
 *~
 
 # Uploads (archivos de usuarios)
-backend/uploads/
+backend/uploads/*
+!backend/uploads/.gitkeep
 
 # Temporary files
 tmp/

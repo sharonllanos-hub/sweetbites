@@ -1,0 +1,171 @@
+
+<style>
+#erd { width: 100%; overflow-x: auto; }
+#erd svg { min-width: 900px; }
+</style>
+<div id="erd" style="padding: 8px 0;"></div>
+<script type="module">
+import mermaid from 'https://esm.sh/mermaid@11/dist/mermaid.esm.min.mjs';
+const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+await document.fonts.ready;
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'base',
+  fontFamily: '"Anthropic Sans", sans-serif',
+  themeVariables: {
+    darkMode: dark,
+    fontSize: '13px',
+    fontFamily: '"Anthropic Sans", sans-serif',
+    lineColor: dark ? '#9c9a92' : '#73726c',
+    textColor: dark ? '#c2c0b6' : '#3d3d3a',
+    primaryColor: dark ? '#2a2a3e' : '#EEEDFE',
+    primaryBorderColor: dark ? '#534AB7' : '#534AB7',
+    primaryTextColor: dark ? '#c2c0b6' : '#26215C',
+  },
+});
+
+const diagram = `erDiagram
+  users {
+    int id PK
+    varchar nombre
+    varchar email
+    varchar password_hash
+    varchar telefono
+    enum rol
+    enum plan
+    varchar foto_perfil
+    text bio
+    datetime fecha_registro
+  }
+  categories {
+    int id PK
+    varchar nombre
+    varchar icono
+    varchar color
+    text descripcion
+  }
+  recipes {
+    int id PK
+    varchar nombre
+    text descripcion
+    int categoria_id FK
+    int autor_id FK
+    enum dificultad
+    int tiempo_preparacion
+    int porciones
+    varchar imagen
+    boolean es_premium
+    datetime fecha_publicacion
+  }
+  ingredients {
+    int id PK
+    int receta_id FK
+    varchar nombre
+    decimal cantidad
+    varchar unidad
+    varchar seccion
+  }
+  steps {
+    int id PK
+    int receta_id FK
+    int numero_paso
+    text descripcion
+    varchar foto
+  }
+  favorites {
+    int id PK
+    int usuario_id FK
+    int receta_id FK
+    datetime fecha_guardado
+  }
+  collections {
+    int id PK
+    int usuario_id FK
+    varchar nombre
+    text descripcion
+    datetime fecha_creacion
+  }
+  collection_recipes {
+    int id PK
+    int coleccion_id FK
+    int receta_id FK
+    datetime fecha_agregado
+  }
+  ratings {
+    int id PK
+    int receta_id FK
+    int usuario_id FK
+    int puntuacion
+    datetime fecha
+  }
+  comments {
+    int id PK
+    int receta_id FK
+    int usuario_id FK
+    int parent_id FK
+    text comentario
+    datetime fecha
+  }
+  comment_reactions {
+    int id PK
+    int comment_id FK
+    int usuario_id FK
+    enum tipo
+    datetime fecha
+  }
+  notifications {
+    int id PK
+    int usuario_id FK
+    varchar tipo
+    varchar titulo
+    text mensaje
+    boolean leida
+    datetime fecha
+  }
+
+  users ||--o{ recipes : "crea (autor)"
+  categories ||--o{ recipes : "agrupa"
+  recipes ||--o{ ingredients : "tiene"
+  recipes ||--o{ steps : "tiene"
+  users ||--o{ favorites : "guarda"
+  recipes ||--o{ favorites : "guardada en"
+  users ||--o{ collections : "crea"
+  collections ||--o{ collection_recipes : "contiene"
+  recipes ||--o{ collection_recipes : "incluida en"
+  users ||--o{ ratings : "valora"
+  recipes ||--o{ ratings : "recibe"
+  users ||--o{ comments : "escribe"
+  recipes ||--o{ comments : "recibe"
+  comments ||--o{ comments : "responde a"
+  comments ||--o{ comment_reactions : "recibe"
+  users ||--o{ comment_reactions : "reacciona"
+  users ||--o{ notifications : "recibe"
+`;
+
+const { svg } = await mermaid.render('erd-svg', diagram);
+document.getElementById('erd').innerHTML = svg;
+
+document.querySelectorAll('#erd svg.erDiagram .node').forEach(node => {
+  const firstPath = node.querySelector('path[d]');
+  if (!firstPath) return;
+  const d = firstPath.getAttribute('d');
+  const nums = d.match(/-?[\d.]+/g)?.map(Number);
+  if (!nums || nums.length < 8) return;
+  const xs = [nums[0], nums[2], nums[4], nums[6]];
+  const ys = [nums[1], nums[3], nums[5], nums[7]];
+  const x = Math.min(...xs), y = Math.min(...ys);
+  const w = Math.max(...xs) - x, h = Math.max(...ys) - y;
+  const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  rect.setAttribute('x', x); rect.setAttribute('y', y);
+  rect.setAttribute('width', w); rect.setAttribute('height', h);
+  rect.setAttribute('rx', '8');
+  for (const a of ['fill', 'stroke', 'stroke-width', 'class', 'style']) {
+    if (firstPath.hasAttribute(a)) rect.setAttribute(a, firstPath.getAttribute(a));
+  }
+  firstPath.replaceWith(rect);
+});
+
+document.querySelectorAll('#erd svg.erDiagram .row-rect-odd path, #erd svg.erDiagram .row-rect-even path').forEach(p => {
+  p.setAttribute('stroke', 'none');
+});
+</script>

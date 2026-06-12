@@ -654,4 +654,147 @@ router.delete('/comments/:id', async (req, res) => {
     }
 });
 
+// ========== GESTIÓN DE RECETAS ESPECIALES ==========
+
+// PUT /api/admin/recipes/:id/set-week - Marcar/Desmarcar como receta de la semana
+router.put('/recipes/:id/set-week', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { active } = req.body; // true para marcar, false para desmarcar
+
+        if (active) {
+            // Primero desmarcar todas las recetas de la semana
+            await db.execute('UPDATE recipes SET receta_semana = FALSE');
+
+            // Marcar solo esta como receta de la semana
+            await db.execute('UPDATE recipes SET receta_semana = TRUE WHERE id = ?', [id]);
+
+            res.json({
+                success: true,
+                message: 'Receta marcada como receta de la semana'
+            });
+        } else {
+            // Solo desmarcar esta receta
+            await db.execute('UPDATE recipes SET receta_semana = FALSE WHERE id = ?', [id]);
+
+            res.json({
+                success: true,
+                message: 'Receta desmarcada como receta de la semana'
+            });
+        }
+
+    } catch (error) {
+        console.error('Error al actualizar receta de la semana:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al actualizar receta de la semana'
+        });
+    }
+});
+
+// PUT /api/admin/recipes/:id/set-featured - Marcar/Desmarcar como destacada
+router.put('/recipes/:id/set-featured', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { active } = req.body; // true para marcar, false para desmarcar
+
+        await db.execute(
+            'UPDATE recipes SET destacada = ? WHERE id = ?',
+            [active, id]
+        );
+
+        res.json({
+            success: true,
+            message: active ? 'Receta marcada como destacada' : 'Receta desmarcada como destacada'
+        });
+
+    } catch (error) {
+        console.error('Error al actualizar receta destacada:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al actualizar receta destacada'
+        });
+    }
+});
+
+// PUT /api/admin/recipes/:id/edit - Editar receta completa (admin)
+router.put('/recipes/:id/edit', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const {
+            nombre,
+            descripcion,
+            categoria_id,
+            dificultad,
+            tiempo_preparacion,
+            porciones,
+            temporada,
+            dieta_especial
+        } = req.body;
+
+        // Construir query dinámicamente según los campos enviados
+        const updates = [];
+        const values = [];
+
+        if (nombre !== undefined) {
+            updates.push('nombre = ?');
+            values.push(nombre);
+        }
+        if (descripcion !== undefined) {
+            updates.push('descripcion = ?');
+            values.push(descripcion);
+        }
+        if (categoria_id !== undefined) {
+            updates.push('categoria_id = ?');
+            values.push(categoria_id);
+        }
+        if (dificultad !== undefined) {
+            updates.push('dificultad = ?');
+            values.push(dificultad);
+        }
+        if (tiempo_preparacion !== undefined) {
+            updates.push('tiempo_preparacion = ?');
+            values.push(tiempo_preparacion);
+        }
+        if (porciones !== undefined) {
+            updates.push('porciones = ?');
+            values.push(porciones);
+        }
+        if (temporada !== undefined) {
+            updates.push('temporada = ?');
+            values.push(temporada);
+        }
+        if (dieta_especial !== undefined) {
+            updates.push('dieta_especial = ?');
+            values.push(dieta_especial);
+        }
+
+        if (updates.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'No hay campos para actualizar'
+            });
+        }
+
+        values.push(id);
+
+        await db.execute(
+            `UPDATE recipes SET ${updates.join(', ')} WHERE id = ?`,
+            values
+        );
+
+        res.json({
+            success: true,
+            message: 'Receta actualizada exitosamente'
+        });
+
+    } catch (error) {
+        console.error('Error al actualizar receta:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al actualizar receta'
+        });
+    }
+});
+
 module.exports = router;
